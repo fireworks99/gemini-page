@@ -56,9 +56,9 @@
               </el-tooltip>
 
               <div v-show="item.siblings && item.siblings.length > 1" class="opt_page">
-                <ArrowLeft :disabled="item.rank === 1" @click="toggleBranch(item, -1)" />
+                <ArrowLeft :class="{ disabled: item.rank === 1 }" @click="toggleBranch(item, -1)" />
                 <span>{{ item.rank }} / {{ item.siblings ? item.siblings.length : 1 }}</span>
-                <ArrowRight :disabled="item.rank === (item.siblings ? item.siblings.length : 1)"
+                <ArrowRight :class="{ disabled: item.rank === (item.siblings?.length ?? 1) }"
                   @click="toggleBranch(item, 1)" />
               </div>
             </div>
@@ -224,7 +224,7 @@ const fetchAnswerToDialogue = (val: string) => {
           obj.siblings = currNode.children;
 
           const node = new TreeNode(currNode, obj);
-          currNode.children.push(obj);
+          currNode.children.push(node);
 
           // 指针移动到当前节点
           currNode = node;
@@ -521,6 +521,11 @@ onUnmounted(() => {
           display: flex;
           align-items: center;
           white-space: nowrap; //坚决不换行
+
+          .disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+          }
 
           svg {
             width: 24px;

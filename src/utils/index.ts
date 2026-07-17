@@ -4,8 +4,8 @@ export type TreeNodeData = {
   answer: string;
   is_edit: boolean;
   edit_text: string;
-  siblings: null | any[];
-  rank: number;//当前节点有多少子树
+  siblings: null | any[];   //我爸妈所有的孩子
+  rank: number;             //我在家排老几
 }
 
 export class TreeNode<T> {
