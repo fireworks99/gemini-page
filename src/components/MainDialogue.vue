@@ -37,15 +37,13 @@
                 </div>
               </el-tooltip>
 
-              <!-- <el-tooltip class="item" effect="dark" content="编辑消息" placement="bottom">
+              <el-tooltip class="item" effect="dark" content="编辑消息" placement="bottom">
                 <div class="opt_item" @click="editQuestion(item)">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M18.2286 17.3545H1.77142C1.34538 17.3545 1 17.6999 1 18.1259C1 18.552 1.34538 18.8973 1.77142 18.8973H18.2286C18.6546 18.8973 19 18.552 19 18.1259C19 17.6999 18.6546 17.3545 18.2286 17.3545Z"
                       fill="currentColor"></path>
-                    <mask id="mask0_400_418" maskUnits="userSpaceOnUse" x="1" y="1" width="15"
-                      height="15">
+                    <mask id="mask0_400_418" maskUnits="userSpaceOnUse" x="1" y="1" width="15" height="15">
                       <path d="M15.1429 1.10254H1V15.2454H15.1429V1.10254Z" fill="white"></path>
                     </mask>
                     <g mask="url(#mask0_400_418)">
@@ -55,32 +53,26 @@
                     </g>
                   </svg>
                 </div>
-              </el-tooltip> -->
+              </el-tooltip>
 
-              <!-- <div v-show="item.siblings && item.siblings.length > 1" class="opt_page">
-                <i class="el-icon-arrow-left" :disabled="item.rank === 1"
-                  @click="toggleBranch(item, -1)">
-                </i>
-                <span>{{ item.rank }} / {{ item.siblings? item.siblings.length : 1 }}</span>
-                <i class="el-icon-arrow-right"
-                  :disabled="item.rank === (item.siblings? item.siblings.length : 1)"
-                  @click="toggleBranch(item, 1)">
-                </i>
-              </div> -->
+              <div v-show="item.siblings && item.siblings.length > 1" class="opt_page">
+                <ArrowLeft :disabled="item.rank === 1" @click="toggleBranch(item, -1)" />
+                <span>{{ item.rank }} / {{ item.siblings ? item.siblings.length : 1 }}</span>
+                <ArrowRight :disabled="item.rank === (item.siblings ? item.siblings.length : 1)"
+                  @click="toggleBranch(item, 1)" />
+              </div>
             </div>
 
           </div>
 
-          <!-- <div class="qu_edit" v-show="item.is_edit">
-            <textarea v-model="item.edit_text" class="qu_edit_text"
-              @keydown="handleKeydown(item, $event)"></textarea>
+          <div class="qu_edit" v-show="item.is_edit">
+            <textarea v-model="item.edit_text" class="qu_edit_text" @keydown="handleKeydown(item, $event)"></textarea>
             <div class="qu_edit_mirror">{{ item.edit_text }}</div>
             <div class="qu_edit_btn">
-              <el-button size="mini" round @click="item.is_edit = false">取消</el-button>
-              <el-button size="mini" round type="primary"
-                @click="appendToNewBranch(item)">发送</el-button>
+              <el-button size="small" round @click="item.is_edit = false">取消</el-button>
+              <el-button size="small" round type="primary" @click="appendToNewBranch(item)">发送</el-button>
             </div>
-          </div> -->
+          </div>
         </div>
 
         <!-- 回答 -->
@@ -104,6 +96,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { type TreeNodeData, TreeNode } from '@/utils';
 import emitter from '@/utils/mitt';
 import { ElMessage } from 'element-plus';
+import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 
 import { useMainStore } from "@/store";
 const store = useMainStore();
@@ -121,7 +114,7 @@ watch(
 )
 
 const clearAll = ref(false);
-let root = new TreeNode(null, null);
+let root = new TreeNode<TreeNodeData | null>(null, null);
 let currNode = root;
 const autoScroll = ref(true);
 const generating = ref(false);
@@ -173,119 +166,138 @@ const fetchAnswerToDialogue = (val: string) => {
   // const md = null;
 
   // 4.发送请求并处理
-  fetch(window.APP_CONFIG.BASE_API + '/chat', {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages }),
-  }).then((response) => {
+  try {
+    fetch(window.APP_CONFIG.BASE_API + '/chat', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    }).then(async response => {
 
-    if (!response.body) {
-      throw new Error("ReadableStream not supported in this browser.");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-
-    let receivedText = '', got_ans = false;
-
-    reader.read().then(function processText({ done, value }): Promise<void> {
-
-      // 1.中途执行清空对话
-      if (clearAll.value) {
-        dataList.splice(0); //清空对话
-        root.destroy();
-        root = new TreeNode(null, null);
-        currNode = root;
-        clearAll.value = false; // 重置开关
-
-        return Promise.resolve();
+      if (!response.ok) {
+        // 尝试解析错误信息
+        let errorMsg = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error?.message || errorMsg;
+        } catch (_) {
+          // 如果响应体不是JSON，忽略
+        }
+        throw new Error(errorMsg);
       }
 
-      // 2.正常回答结束
-      if (done) {
-        console.log("流式输出结束");
-
-        generating.value = false;
-        autoScroll.value = true;
-
-        // 更新树（待获取了完整的 answer/docs 之后再执行即可）
-        const last = dataList[dataList.length - 1];
-        last.rank = currNode.children ? currNode.children.length + 1 : 1;
-
-        // 子元素value中的siblings属性是一个引用，指向父元素的children属性
-        const obj = JSON.parse(JSON.stringify(last));
-        last.siblings = currNode.children;
-        obj.siblings = currNode.children;
-
-        const node = new TreeNode(currNode, obj);
-        currNode.children.push(obj);
-
-        // 指针移动到当前节点
-        currNode = node;
-
-        return Promise.resolve();
+      if (!response.body) {
+        throw new Error("ReadableStream not supported in this browser.");
       }
 
-      const chunkText = decoder.decode(value, { stream: true });
-      let parseData = { docs: undefined, content: "", data: null, error: '' };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
 
-      {
-        // 分割数据
-        const chunks = chunkText.trim().split('data: ');
+      let receivedText = '', got_ans = false;
 
-        chunks.forEach(chunk => {
-          if (chunk.trim()) {
-            let idx = chunk.lastIndexOf('}');
-            let removeT = chunk + '';
-            if (idx > 0) {
-              removeT = chunk.substring(0, idx + 1);
-            } else {
-              return;  //: ping - 2025-02-10 08:36:31.266873
+      reader.read().then(function processText({ done, value }): Promise<void> {
+
+        // 1.中途执行清空对话
+        if (clearAll.value) {
+          dataList.splice(0); //清空对话
+          root.destroy();
+          root = new TreeNode(null, null);
+          currNode = root;
+          clearAll.value = false; // 重置开关
+
+          return Promise.resolve();
+        }
+
+        // 2.正常回答结束
+        if (done) {
+          console.log("流式输出结束");
+
+          generating.value = false;
+          autoScroll.value = true;
+
+          // 更新树（待获取了完整的 answer/docs 之后再执行即可）
+          const last = dataList[dataList.length - 1];
+          last.rank = currNode.children ? currNode.children.length + 1 : 1;
+
+          // 子元素value中的siblings属性是一个引用，指向父元素的children属性
+          const obj = JSON.parse(JSON.stringify(last));
+          last.siblings = currNode.children;
+          obj.siblings = currNode.children;
+
+          const node = new TreeNode(currNode, obj);
+          currNode.children.push(obj);
+
+          // 指针移动到当前节点
+          currNode = node;
+
+          return Promise.resolve();
+        }
+
+        const chunkText = decoder.decode(value, { stream: true });
+        let parseData = { docs: undefined, content: "", data: null, error: '' };
+
+        {
+          // 分割数据
+          const chunks = chunkText.trim().split('data: ');
+
+          chunks.forEach(chunk => {
+            if (chunk.trim()) {
+              let idx = chunk.lastIndexOf('}');
+              let removeT = chunk + '';
+              if (idx > 0) {
+                removeT = chunk.substring(0, idx + 1);
+              } else {
+                return;  //: ping - 2025-02-10 08:36:31.266873
+              }
+              try {
+                // 解析 JSON
+                const jsonData = JSON.parse(removeT);
+                const content = extractText(jsonData);
+
+                parseData.content += content;
+
+              } catch (error) {
+                // 如果解析失败，跳过该 chunk
+                console.log('解析 JSON 失败:', error);
+                console.log(chunk);
+              }
             }
-            try {
-              // 解析 JSON
-              const jsonData = JSON.parse(removeT);
-              const content = extractText(jsonData);
+          });
+        }
 
-              parseData.content += content;
+        // temOutVars = afterCB && (afterCB(parseData, temOutVars));
+        receivedText += parseData.content;
 
-            } catch (error) {
-              // 如果解析失败，跳过该 chunk
-              console.log('解析 JSON 失败:', error);
-              console.log(chunk);
-            }
-          }
-        });
-      }
+        // 这里执行Markdown解析!!!
+        const parseMd = receivedText;
 
-      // temOutVars = afterCB && (afterCB(parseData, temOutVars));
-      receivedText += parseData.content;
+        dataList[dataList.length - 1].answer = parseMd;
+        generating.value = true;
 
-      // 这里执行Markdown解析!!!
-      const parseMd = receivedText;
+        if (!got_ans) {
+          // 这里可以写深度思考的事件（如果有深度思考）
 
-      dataList[dataList.length - 1].answer = parseMd;
-      generating.value = true;
+          emitter.emit("GotAnswer");
+          got_ans = true;
+        }
 
-      if (!got_ans) {
-        // 这里可以写深度思考的事件（如果有深度思考）
+        if (autoScroll.value) {
+          scrollToBottom();
+        }
 
-        emitter.emit("GotAnswer");
-        got_ans = true;
-      }
+        // 继续读取下一块数据
+        return reader.read().then(processText);
+      });
 
-      if (autoScroll.value) {
-        scrollToBottom();
-      }
+    })
+      .catch((error) => {
+        console.error("Stream error:", error);
+        ElMessage.error(`请求失败：${error.message}`);
+        generating.value = false; // 记得重置状态
+      });
+  } catch (err) {
+    ElMessage.error(String(err));
+  }
 
-      // 继续读取下一块数据
-      return reader.read().then(processText);
-    });
-
-  })
-    .catch((error) => {
-      console.error("Stream error:", error);
-    });
 }
 
 // 页面滑动到最底端
@@ -299,7 +311,6 @@ const scrollToBottom = () => {
 // 复制功能
 import ClipboardJS from 'clipboard';
 const cbInstances = ref<ClipboardJS[]>([]);
-
 const initClipboardJS = () => {
 
   // 1.回答中代码的复制
@@ -356,6 +367,57 @@ const onScroll = (e: Event) => {
     autoScroll.value = !generating.value;
   }
   lastScrollTop = target.scrollTop < 0 ? 0 : target.scrollTop;
+}
+
+// 编辑问题
+const editQuestion = (item: TreeNodeData) => {
+  item.is_edit = true;
+  item.edit_text = item.question;
+}
+
+// 编辑问题时按下回车
+const handleKeydown = (item: TreeNodeData, event: KeyboardEvent) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    emitter.emit("BottomActive");
+    appendToNewBranch(item);
+  }
+}
+
+// 将问答添加到新的分支
+const appendToNewBranch = (item: TreeNodeData) => {
+  while (currNode.value?.id !== item.id) {
+    currNode = currNode.parent || root;
+    dataList.pop();
+  }
+  currNode = currNode.parent || root;
+  dataList.pop();
+  fetchAnswerToDialogue(item.edit_text);
+}
+
+// 切换分支
+const toggleBranch = (item: TreeNodeData, step: number) => {
+  const r = item.rank;
+  const rank = r + step;
+  if (rank < 1 || rank > (item.siblings || []).length) {
+    return;
+  }
+
+  while (currNode.value?.id !== item.id) {
+    currNode = currNode.parent || root;
+    dataList.pop();
+  }
+  currNode = currNode.parent || root;
+  dataList.pop();
+
+  let node = currNode.children[rank - 1];
+  dataList.push({ ...(node.value as TreeNodeData) });
+  while (node.children && node.children.length > 0) {
+    const lastIndex = node.children.length - 1;
+    node = node.children[lastIndex];
+    dataList.push({ ...(node.value as TreeNodeData) });
+  }
+  currNode = node;
 }
 
 onMounted(() => {
@@ -460,7 +522,7 @@ onUnmounted(() => {
           align-items: center;
           white-space: nowrap; //坚决不换行
 
-          i {
+          svg {
             width: 24px;
             height: 24px;
             display: flex;
@@ -554,7 +616,7 @@ onUnmounted(() => {
     position: relative;
     margin-bottom: 12px;
     background-color: #e2ebff;
-    padding: 12px 32px 16px 64px;
+    padding: 12px 32px 16px 32px;
     box-sizing: border-box;
     border-radius: 16px;
     border-top-left-radius: 0;
