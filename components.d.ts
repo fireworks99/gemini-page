@@ -19,6 +19,8 @@ declare module 'vue' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     Header: typeof import('./src/components/Header.vue')['default']
+    IconCopy: typeof import('./src/components/Icons/IconCopy.vue')['default']
+    IconEdit: typeof import('./src/components/Icons/IconEdit.vue')['default']
     IntroSelf: typeof import('./src/components/IntroSelf.vue')['default']
     MainDialogue: typeof import('./src/components/MainDialogue.vue')['default']
   }
