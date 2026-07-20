@@ -1,3 +1,10 @@
+import MarkdownIt from "markdown-it";
+import hljs from 'markdown-it-highlightjs';
+import mk from 'markdown-it-katex';
+import multimdTable from 'markdown-it-multimd-table';
+import markdownItLinkAttributes from "markdown-it-link-attributes";
+import DOMPurify from "dompurify";
+
 export type TreeNodeData = {
   id: number;
   question: string;
@@ -45,4 +52,95 @@ export class TreeNode<T> {
     this.value = null;
     this.children = [];
   }
+}
+
+// 返回 HTML 字符串
+export function innerProcess(mdStr: string): string {
+  if (!mdStr) {
+    return "";
+  }
+
+  const md = new MarkdownIt()
+    .use(hljs, { inline: true })
+    .use(mk)
+    .use(multimdTable, {
+      multiline: false,
+      rowspan: false,
+      headerless: false,
+      multibody: true,
+      autolabel: true,
+    })
+    .use(markdownItLinkAttributes, {
+      pattern: /^http[s]?:\/\//, // 只对外部链接添加特定属性
+      attrs: { target: "_blank", rel: "noopener" }
+    }); // 链接属性
+
+  // 0. 字符串替换
+  const formatText = mdStr
+    .replace(/\\\( /g, "$")
+    .replace(/\\\(/g, "$")
+    .replace(/ \\\)/g, "$")
+    .replace(/\\\)/g, "$")
+    .replace(/\\\[\\n/g, "$$$$\n")
+    .replace(/\\\[/g, "$$$$\n")
+    .replace(/\\n\\\]/g, "\n$$$$")
+    .replace(/\\\]/g, "\n$$$$");
+
+  // 1. Markdown 渲染
+  const renderedContent = md.render(formatText);
+
+  // 2. DOM 净化（防 XSS）
+  const safeHtml = DOMPurify.sanitize(renderedContent);
+
+  // 3. 为代码块添加复制按钮
+  return addCopyButton(safeHtml);
+}
+
+// 返回 HTML 字符串
+function addCopyButton(renderedMarkdown: string): string {
+  const tempDiv: HTMLDivElement = document.createElement("div");
+  tempDiv.innerHTML = renderedMarkdown;
+
+  const preElements = tempDiv.querySelectorAll<HTMLPreElement>("pre");
+
+  preElements.forEach((pre) => {
+    const toolbar = document.createElement("div");
+    toolbar.style.cssText =
+      "display:flex;justify-content:space-between;padding:1em;box-shadow:inset 0 -1px #e2e2e3;";
+
+    // 左侧：语言名称
+    const left = document.createElement("div");
+
+    let lang = "";
+
+    const code = pre.querySelector<HTMLElement>("code");
+    if (code) {
+      const className = Array.from(code.classList).find((item) =>
+        item.startsWith("language-")
+      );
+
+      if (className) {
+        lang = className.replace("language-", "");
+      }
+    }
+
+    left.style.cssText =
+      'font-family:"Courier New", Courier, monospace;';
+    left.textContent = lang;
+
+    toolbar.appendChild(left);
+
+    // 右侧：复制按钮
+    const right = document.createElement("div");
+    right.style.cssText =
+      "font-family:sans-serif;cursor:pointer;";
+    right.textContent = "复制";
+    right.className = "copy-button";
+
+    toolbar.appendChild(right);
+
+    pre.insertBefore(toolbar, pre.firstChild);
+  });
+
+  return tempDiv.innerHTML;
 }

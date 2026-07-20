@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { type TreeNodeData, TreeNode } from '@/utils';
+import { type TreeNodeData, TreeNode, innerProcess } from '@/utils';
 import emitter from '@/utils/mitt';
 import { ElMessage } from 'element-plus';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
@@ -161,7 +161,51 @@ const fetchAnswerToDialogue = (val: string) => {
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
 
-      let receivedText = '', got_ans = false;
+      let receivedText = '', got_ans = false, buffer = '';
+
+      const processChunk = (chunk: Uint8Array) => {
+        buffer += decoder.decode(chunk, { stream: true });
+
+        while (true) {
+          // 找到一条 SSE 消息结束
+          const match = buffer.match(/\r?\n\r?\n/);
+
+          if (!match || match.index === undefined) {
+            break;
+          }
+
+          const end = match.index;
+          const rawEvent = buffer.slice(0, end);
+          buffer = buffer.slice(end + match[0].length);
+
+          parseMessage(rawEvent);
+        }
+      }
+
+      const parseMessage = (message: string) => {
+        const lines = message.split(/\r?\n/);
+
+        for (const line of lines) {
+          if (!line.startsWith("data:")) {
+            continue;
+          }
+
+          const json = line.slice(5).trim();
+
+          if (!json) {
+            continue;
+          }
+
+          try {
+            const obj = JSON.parse(json);
+            const content = extractText(obj);
+            receivedText += content;
+
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
 
       reader.read().then(function processText({ done, value }): Promise<void> {
 
@@ -201,43 +245,10 @@ const fetchAnswerToDialogue = (val: string) => {
           return Promise.resolve();
         }
 
-        const chunkText = decoder.decode(value, { stream: true });
-        let parseData = { docs: undefined, content: "", data: null, error: '' };
-
-        {
-          // 分割数据
-          const chunks = chunkText.trim().split('data: ');
-
-          chunks.forEach(chunk => {
-            if (chunk.trim()) {
-              let idx = chunk.lastIndexOf('}');
-              let removeT = chunk + '';
-              if (idx > 0) {
-                removeT = chunk.substring(0, idx + 1);
-              } else {
-                return;  //: ping - 2025-02-10 08:36:31.266873
-              }
-              try {
-                // 解析 JSON
-                const jsonData = JSON.parse(removeT);
-                const content = extractText(jsonData);
-
-                parseData.content += content;
-
-              } catch (error) {
-                // 如果解析失败，跳过该 chunk
-                console.log('解析 JSON 失败:', error);
-                console.log(chunk);
-              }
-            }
-          });
-        }
-
-        // temOutVars = afterCB && (afterCB(parseData, temOutVars));
-        receivedText += parseData.content;
+        processChunk(value);
 
         // 这里执行Markdown解析!!!
-        const parseMd = receivedText;
+        const parseMd = innerProcess(receivedText);
 
         dataList[dataList.length - 1].answer = parseMd;
         generating.value = true;
