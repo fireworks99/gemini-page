@@ -66,12 +66,23 @@ import { ElMessage } from 'element-plus';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 import IconCopy from './Icons/IconCopy.vue';
 import IconEdit from './Icons/IconEdit.vue';
+import 'highlight.js/styles/github.css';
 
 import { useMainStore } from "@/store";
 const store = useMainStore();
 
 const cnt = ref(0);
-const dataList = reactive<TreeNodeData[]>([]);
+const dataList = reactive<TreeNodeData[]>([
+  // {
+  //   answer: `<p>为您整理了 <strong>JavaScript (JS)</strong>、<strong>Java</strong> 和 <strong>C++</strong> 三种语言的 \"Hello World\" 入门程序，并附带了简要的运行说明。</p>\n<hr>\n<h3>1. JavaScript (JS)</h3>\n<p>JavaScript 是目前最流行的脚本语言，广泛用于网页开发和后端（Node.js）。</p>\n<h4>代码：</h4>\n<pre><div class=\"toolbar\"><div class=\"left\">javascript</div><div class=\"right copy-button\">复制</div></div><code class=\"hljs language-javascript\"><span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">\"Hello, World!\"</span>);\n</code></pre>\n<h4>如何运行：</h4>\n<ul>\n<li><strong>方法 A（浏览器）：</strong> 打开任意浏览器（如 Chrome），按 <code class=\"hljs\">F12</code> 打开开发者工具，切换到 <code class=\"hljs\"><span class=\"hljs-built_in\">Console</span></code>（控制台）面板，粘贴代码并回车。</li>\n<li><strong>方法 B（Node.js）：</strong> 在电脑上安装 Node.js，新建文件 <code class=\"hljs\"><span class=\"hljs-keyword\">app</span>.js</code>，写入代码，在终端运行：<pre><div class=\"toolbar\"><div class=\"left\">bash</div><div class=\"right copy-button\">复制</div></div><code class=\"hljs language-bash\">node app.js\n</code></pre>\n</li>\n</ul>\n<hr>\n<h3>2. Java</h3>\n<p>Java 是一种严格的、面向对象的强类型语言，广泛应用于企业级开发和 Android 应用。</p>\n<h4>代码：</h4>\n<pre><div class=\"toolbar\"><div class=\"left\">java</div><div class=\"right copy-button\">复制</div></div><code class=\"hljs language-java\"><span class=\"hljs-keyword\">public</span> <span class=\"hljs-keyword\">class</span> <span class=\"hljs-title class_\">HelloWorld</span> {\n    <span class=\"hljs-keyword\">public</span> <span class=\"hljs-keyword\">static</span> <span class=\"hljs-keyword\">void</span> <span class=\"hljs-title function_\">main</span><span class=\"hljs-params\">(String[] args)</span> {\n        System.out.println(<span class=\"hljs-string\">\"Hello, World!\"</span>);\n    }\n}\n</code></pre>\n<h4>如何运行：</h4>\n<ol>\n<li>安装 JDK (Java Development Kit)。</li>\n<li>将上述代码保存为 <strong><code class=\"hljs\">HelloWorld.java</code></strong>（文件名必须与类名 <code class=\"hljs\"><span class=\"hljs-attribute\">HelloWorld</span></code> 完全一致）。</li>\n<li>打开终端，编译并运行：<pre><div class=\"toolbar\"><div class=\"left\">bash</div><div class=\"right copy-button\">复制</div></div><code class=\"hljs language-bash\">javac HelloWorld.java  <span class=\"hljs-comment\"># 编译，生成 HelloWorld.class 文件</span>\njava HelloWorld        <span class=\"hljs-comment\"># 运行</span>\n</code></pre>\n</li>\n</ol>\n<hr>\n<h3>3. C++</h3>\n<p>C++ 是一种高效、通用的系统级编程语言，广泛用于游戏引擎、操作系统和嵌入式开发。</p>\n<h4>代码：</h4>\n<pre><div class=\"toolbar\"><div class=\"left\">cpp</div><div class=\"right copy-button\">复制</div></div><code class=\"hljs language-cpp\"><span class=\"hljs-meta\">#<span class=\"hljs-keyword\">include</span> <span class=\"hljs-string\">&lt;iostream&gt;</span></span>\n\n<span class=\"hljs-function\"><span class=\"hljs-type\">int</span> <span class=\"hljs-title\">main</span><span class=\"hljs-params\">()</span> </span>{\n    std::cout &lt;&lt; <span class=\"hljs-string\">\"Hello, World!\"</span> &lt;&lt; std::endl;\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-number\">0</span>;\n}\n</code></pre>\n<h4>如何运行：</h4>\n<ol>\n<li>安装 C++ 编译器（如 GCC/G++ 或 Clang）。</li>\n<li>将代码保存为 <strong><code class=\"hljs\"><span class=\"hljs-selector-tag\">main</span><span class=\"hljs-selector-class\">.cpp</span></code></strong>。</li>\n<li>打开终端，编译并运行：<pre><div class=\"toolbar\"><div class=\"left\">bash</div><div class=\"right copy-button\">复制</div></div><code class=\"hljs language-bash\">g++ main.cpp -o main   <span class=\"hljs-comment\"># 编译，生成名为 main 的可执行文件</span>\n./main                 <span class=\"hljs-comment\"># 运行（Windows 下输入 main.exe）</span>\n</code></pre>\n</li>\n</ol>\n<hr>\n<h3>总结对比</h3>\n<table>\n<thead>\n<tr>\n<th style=\"text-align:left\">语言</th>\n<th style=\"text-align:left\">运行环境</th>\n<th style=\"text-align:left\">特点</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align:left\"><strong>JavaScript</strong></td>\n<td style=\"text-align:left\">浏览器 / Node.js</td>\n<td style=\"text-align:left\">语法最简单，无需编译，直接解释执行。</td>\n</tr>\n<tr>\n<td style=\"text-align:left\"><strong>Java</strong></td>\n<td style=\"text-align:left\">JVM (Java虚拟机)</td>\n<td style=\"text-align:left\">严格的面向对象结构，一次编写，到处运行。</td>\n</tr>\n<tr>\n<td style=\"text-align:left\"><strong>C++</strong></td>\n<td style=\"text-align:left\">操作系统原生</td>\n<td style=\"text-align:left\">接近底层，性能极高，需要手动管理内存（在复杂程序中）。</td>\n</tr>\n</tbody>\n</table>\n`,
+  //   edit_text: "",
+  //   id: 1,
+  //   is_edit: false,
+  //   question: "分别用JS、Java、C++写入门Hello world程序",
+  //   rank: 1,
+  //   siblings: null
+  // }
+]);
 let lastScrollTop = 0;
 
 watch(
@@ -604,7 +615,6 @@ onUnmounted(() => {
     padding: 12px 32px 16px 32px;
     box-sizing: border-box;
     border-radius: 16px;
-    border-top-left-radius: 0;
     min-height: 80px;
 
     .icon {

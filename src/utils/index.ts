@@ -105,8 +105,7 @@ function addCopyButton(renderedMarkdown: string): string {
 
   preElements.forEach((pre) => {
     const toolbar = document.createElement("div");
-    toolbar.style.cssText =
-      "display:flex;justify-content:space-between;padding:1em;box-shadow:inset 0 -1px #e2e2e3;";
+    toolbar.className = "toolbar";
 
     // 左侧：语言名称
     const left = document.createElement("div");
@@ -124,18 +123,15 @@ function addCopyButton(renderedMarkdown: string): string {
       }
     }
 
-    left.style.cssText =
-      'font-family:"Courier New", Courier, monospace;';
+    left.className = 'left';
     left.textContent = lang;
 
     toolbar.appendChild(left);
 
     // 右侧：复制按钮
     const right = document.createElement("div");
-    right.style.cssText =
-      "font-family:sans-serif;cursor:pointer;";
     right.textContent = "复制";
-    right.className = "copy-button";
+    right.className = "right copy-button";
 
     toolbar.appendChild(right);
 
