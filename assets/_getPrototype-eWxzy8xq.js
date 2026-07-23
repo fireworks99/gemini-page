@@ -1,0 +1,1 @@
+import{S as e,h as t,y as n}from"./isUndefined--lm5T9dM.js";function r(t,n,r){n==`__proto__`&&e?e(t,n,{configurable:!0,enumerable:!0,value:r,writable:!0}):t[n]=r}var i=Object.prototype.hasOwnProperty;function a(e,t,a){var o=e[t];(!(i.call(e,t)&&n(o,a))||a===void 0&&!(t in e))&&r(e,t,a)}var o=t(Object.getPrototypeOf,Object);export{a as n,r,o as t};
