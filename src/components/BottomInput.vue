@@ -185,6 +185,7 @@ onUnmounted(() => {
         overflow-y: auto;
         max-height: 128px;
         font-size: 18px;
+        box-sizing: content-box;
       }
 
       .settings {

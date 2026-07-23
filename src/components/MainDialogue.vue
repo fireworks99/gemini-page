@@ -149,9 +149,9 @@ const fetchAnswerToDialogue = (val: string) => {
     siblings: null,
     rank: 1
   });
-  if (dataList.length > 1) {
-    scrollToBottom();
-  }
+
+  scrollToBottom();
+  
 
   // 3.定义答案格式
   // const md = null;
@@ -314,29 +314,7 @@ import ClipboardJS from 'clipboard';
 const cbInstances = ref<ClipboardJS[]>([]);
 const initClipboardJS = () => {
 
-  // 1.回答中代码的复制
-  const clipboard = new ClipboardJS('.copy-button', {
-    target: (trigger: Element) => {
-      const parent = trigger.parentElement!; // 使用 ! 断言不为 null
-      return parent.nextElementSibling as Element; // 断言为 Element
-    }
-  });
-
-  clipboard.on('success', (e: ClipboardJS.Event) => {
-    e.trigger.innerHTML = '复制成功';
-    setTimeout(() => {
-      e.trigger.innerHTML = '复制';
-    }, 1000);
-    e.clearSelection();
-  });
-
-  clipboard.on('error', (e: ClipboardJS.Event) => {
-    console.error('复制失败:', e.action);
-  });
-
-  cbInstances.value.push(clipboard);
-
-  // 2.问题的复制
+  // 问题的复制
   const q_copy = new ClipboardJS('.opt_q_copy', {
     text: (trigger: Element): string => {
       const parent = trigger.parentElement?.parentElement;
