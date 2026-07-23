@@ -264,6 +264,8 @@ const fetchAnswerToDialogue = (val: string) => {
           // 指针移动到当前节点
           currNode = node;
 
+          scrollToBottom();
+
           return Promise.resolve();
         }
 
