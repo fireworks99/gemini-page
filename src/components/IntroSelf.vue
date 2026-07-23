@@ -5,7 +5,7 @@
         <img src="@/assets/images/logo.png" alt="logo" />
         <img src="@/assets/images/title.png" alt="title" />
       </div>
-      <div class="text">我是Genimi，很高兴见到你！</div>
+      <div class="text">我是Gemini，很高兴见到你！</div>
     </div>
 
     <div class="sub-title">
