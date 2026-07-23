@@ -302,12 +302,16 @@ const fetchAnswerToDialogue = (val: string) => {
 }
 
 // 页面滑动到最底端
+import { nextTick } from "vue";
 const chatContainer = ref<HTMLDivElement>();
-const scrollToBottom = () => {
-  if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-  }
-}
+const scrollToBottom = async () => {
+  await nextTick();
+
+  const el = chatContainer.value;
+  if (!el) return;
+
+  el.scrollTop = el.scrollHeight;
+};
 
 // 复制功能
 import ClipboardJS from 'clipboard';
@@ -619,5 +623,14 @@ onUnmounted(() => {
       left: 16px;
     }
   }
+}
+
+@media (max-width: 768px) {
+  .main_dialogue_wrapper {
+    .answer {
+      background: none;
+    }
+  }
+
 }
 </style>
