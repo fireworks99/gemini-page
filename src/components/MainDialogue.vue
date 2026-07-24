@@ -43,20 +43,30 @@
         </div>
 
         <!-- 回答 -->
-        <div class="answer">
+        <div class="answer" :data-as="item.answer">
 
           <!-- 这里可以有 参考文档、深度思考，只不过本项目没有 -->
 
           <!-- <div v-html="item.answer"></div> -->
-          <MarkdownRender 
-            :content="item.answer"
-            :code-block-props="{
-              stream: true,
-              theme: { light: 'vitesse-light', dark: 'vitesse-dark' },
-              diffMode: 'inline'
-            }" 
-            smooth-streaming="auto" 
-            :fade="false" />
+          <MarkdownRender :content="item.answer" :code-block-props="{
+            stream: true,
+            theme: { light: 'vitesse-light', dark: 'vitesse-dark' },
+            diffMode: 'inline'
+          }" smooth-streaming="auto" :fade="false" />
+
+          <div class="options">
+            <el-tooltip class="item" effect="dark" content="复制" placement="bottom">
+              <div class="opt_item opt_a_copy">
+                <IconCopy />
+              </div>
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="重试" placement="bottom">
+              <div class="opt_item" @click="retry(item.question)">
+                <el-icon :size="22"><RefreshRight /></el-icon>
+              </div>
+            </el-tooltip>
+
+          </div>
         </div>
 
         <div style="height: 36px; margin-top: 12px;"></div>
@@ -72,7 +82,7 @@ import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { type TreeNodeData, TreeNode } from '@/utils';
 import emitter from '@/utils/mitt';
 import { ElMessage } from 'element-plus';
-import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
+import { ArrowLeft, ArrowRight, RefreshRight } from '@element-plus/icons-vue';
 import IconCopy from './Icons/IconCopy.vue';
 import IconEdit from './Icons/IconEdit.vue';
 import { MarkdownRender } from 'markstream-vue';
@@ -85,11 +95,11 @@ const store = useMainStore();
 const cnt = ref(0);
 const dataList = reactive<TreeNodeData[]>([
   // {
-  //   answer: "",
+  //   answer: "**TypeScript（简称 TS）** 是由微软开发的一种开源编程语言。简单来说，**TS 是 JavaScript（JS）的“增强版”或“超集（Superset）”**。\n\n如果用一个公式来表示，那就是：**TypeScript = JavaScript + 类型系统（Type System） + 先进的 JS 特性**。\n\n以下是对 TS 的快速介绍：\n\n---\n\n### 1. 为什么需要 TS？（解决 JS 的痛点）\nJavaScript 是一门**动态类型**语言，写代码时非常自由，但也带来了一些隐患：\n* **隐式类型转换和低级错误：** 比如把字符串和数字相加，或者拼错了变量名，JS 在运行前不会报错，只有在浏览器里运行到那一行时才会崩溃。\n* **维护困难：** 当项目变大、成员变多时，没有类型提示，阅读别人的代码像猜谜。\n\n**TS 的核心目的，就是把这些错误提前到“编译阶段”暴露出来，而不是等到“运行阶段”。**\n\n---\n\n### 2. TS 的核心特性\n\n* **静态类型检查（Static Typing）：** \n  你可以为变量、函数参数和返回值指定类型。如果类型不匹配，编辑器会立即报错。\n* **IDE（代码编辑器）的极致体验：**\n  因为有了类型定义，VS Code 等编辑器可以提供精准的代码自动补全、跳转定义和重构提示。\n* **向下兼容：**\n  TS 代码不能直接在浏览器中运行，它需要通过编译器**编译（转化）成普通的 JS 代码**。你可以配置编译成 ES5、ES6 等任意版本，确保在老旧浏览器上也能运行。\n* **完全兼容 JS：**\n  任何合法的 JS 代码都是合法的 TS 代码。你可以把一个 `.js` 文件直接改名为 `.ts`，它依然可以工作。\n\n---\n\n### 3. 代码对比直观感受\n\n**JavaScript 例子：**\n```javascript\nfunction greet(names) {\n    // 如果不小心传了数字，names.join 会报错导致程序崩溃\n    return \"Hello, \" + names.join(\", \"); \n}\ngreet(123); // 运行到这里才会报错：names.join is not a function\n```\n\n**TypeScript 例子：**\n```typescript\n// 限制 names 必须是字符串数组 (string[])\nfunction greet(names: string[]): string {\n    return \"Hello, \" + names.join(\", \");\n}\n\ngreet(123); // 🔴 在你写下这行代码时，编辑器就会爆红报错，根本不让你运行\ngreet([\"Alice\", \"Bob\"]); // 🟢 正确\n```\n\n---\n\n### 4. TS 的优缺点\n\n**优点：**\n1. **Bug 更少：** 在写代码时就能发现 80% 的低级错误。\n2. **易于维护：** 代码即文档，看类型定义就能明白接口结构，非常适合多人协作的大型项目。\n3. **主流趋势：** 如今前端主流框架（Vue 3, React, Angular）和 Node.js 社区都全面拥抱 TS，是前端工程师的必备技能。\n\n**缺点：**\n1. **学习成本：** 需要学习接口（Interface）、泛型（Generics）等新概念。\n2. **开发前期多写代码：** 需要写很多类型声明，前期开发速度可能会变慢（但后期维护会省下大量时间）。\n3. **编译时间：** 项目非常庞大时，编译过程会稍微消耗一些时间。\n\n### 总结\n**TypeScript 就像是给 JavaScript 穿上了一件“防弹衣”**。虽然穿衣服（写类型）的过程有点繁琐，但它能极大地保护你的代码在复杂的线上环境中不轻易“受伤”。",
   //   edit_text: "",
   //   id: 1,
   //   is_edit: false,
-  //   question: "泰勒公式",
+  //   question: "简单介绍一下TS",
   //   rank: 1,
   //   siblings: null
   // }
@@ -151,7 +161,7 @@ const fetchAnswerToDialogue = (val: string) => {
   });
 
   scrollToBottom();
-  
+
 
   // 3.定义答案格式
   // const md = null;
@@ -271,6 +281,8 @@ const fetchAnswerToDialogue = (val: string) => {
 
         processChunk(value);
 
+        // console.log('receivedText: ', receivedText);
+
         dataList[dataList.length - 1].answer = receivedText;
         generating.value = true;
 
@@ -294,9 +306,11 @@ const fetchAnswerToDialogue = (val: string) => {
         console.error("Stream error:", error);
         ElMessage.error(`请求失败：${error.message}`);
         generating.value = false; // 记得重置状态
+        emitter.emit("GotAnswer");
       });
   } catch (err) {
     ElMessage.error(String(err));
+    emitter.emit("GotAnswer");
   }
 
 }
@@ -336,6 +350,25 @@ const initClipboardJS = () => {
   });
 
   cbInstances.value.push(q_copy);
+
+  // 回答的复制
+  const a_copy = new ClipboardJS('.opt_a_copy', {
+    text: (trigger: Element): string => {
+      const parent = trigger.parentElement?.parentElement;
+      return parent?.getAttribute('data-as') || '';
+    }
+  });
+
+  a_copy.on('success', (e: ClipboardJS.Event) => {
+    ElMessage.success('复制成功');
+    e.clearSelection();
+  });
+
+  a_copy.on('error', (e: ClipboardJS.Event) => {
+    console.error('复制失败:', e.action);
+  });
+
+  cbInstances.value.push(a_copy);
 }
 
 // 监听用户的滑动
@@ -401,6 +434,16 @@ const toggleBranch = (item: TreeNodeData, step: number) => {
     dataList.push({ ...(node.value as TreeNodeData) });
   }
   currNode = node;
+}
+
+// 重试（这会重建当前节点及其子树）
+const retry = (question: string) => {
+  emitter.emit("BottomActive");
+  const tem = currNode.parent || root;
+  currNode.destroy();
+  currNode = tem;
+  dataList.pop();
+  fetchAnswerToDialogue(question);
 }
 
 onMounted(() => {
@@ -492,7 +535,7 @@ onUnmounted(() => {
           justify-content: center;
           border-radius: 8px;
           cursor: pointer;
-          display: none;
+          // display: none;
 
           &:hover {
             background-color: #f5f5f5;
@@ -508,24 +551,6 @@ onUnmounted(() => {
           .disabled {
             opacity: 0.4;
             cursor: not-allowed;
-          }
-
-          svg {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            cursor: pointer;
-
-            &:not([disabled]):hover {
-              background-color: #f5f5f5;
-            }
-
-            &[disabled] {
-              cursor: not-allowed;
-            }
           }
 
           span {
@@ -602,25 +627,39 @@ onUnmounted(() => {
   .answer {
     color: rgb(64, 64, 64);
     position: relative;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg,#0f766e11,#14b8a611);
+    margin-bottom: 32px;
+    background: linear-gradient(135deg, #0f766e11, #14b8a611);
     padding: 12px 32px 16px 32px;
     box-sizing: border-box;
     border-radius: 16px;
     min-height: 80px;
 
-    .icon {
-      background-color: #fff;
-      border-radius: 50%;
-      justify-content: center;
-      align-items: center;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      box-shadow: 0 0 0 1px #d5e4ff;
+    position: relative;
+
+    .options {
       position: absolute;
-      top: 22px;
-      left: 16px;
+      left: 0px;
+      bottom: -36px;
+
+      display: flex;
+      align-items: center;
+
+      .opt_item {
+        margin-right: 8px;
+        color: #909090;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        cursor: pointer;
+        // display: none;
+
+        &:hover {
+          background-color: #f5f5f5;
+        }
+      }
     }
   }
 }
